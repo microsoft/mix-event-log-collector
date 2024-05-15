@@ -1,0 +1,22 @@
+fetcher:
+    config:
+        consumer_options:
+            auto.offset.reset: earliest
+writer:
+    name: opensearch
+    # config:
+        ### Required Parameters
+
+        # none
+
+        ### Optional Parameters
+        
+        # index_prefix: # Default value is set to mix3-logs-v2
+        # refresh: # Default value is true
+        # addresses:
+            # - http://localhost:9200   # this is the default
+
+        # num_workers: 50   # Num Workers specifies how many event logs can be processed in parallel by log writer
+        # rate_limit:       # Rate Limit controls how fast event logs can be written to storage
+            # limit: 1000
+            # burst: 10

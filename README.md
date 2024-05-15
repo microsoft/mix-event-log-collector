@@ -1,14 +1,48 @@
-# Project
+# Mix Event Log Collector
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+The `mix-event-log-collector` offers users of the Mix platform with an out-of-box solution for collecting event log data via the `mix.log` api.
 
-As the maintainer of this project, please make a few updates:
+## Overview
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+The `mix-event-log-collector` provides a scalable and highly configurable event log data pipeline and processing solution that can be leveraged by Nuance customers for accessing near real-time event log data generated in the Mix run-time and on-premise deployments for reporting and analytics. 
+
+The `mix-event-log-collector` can run either as a single stand-alone client, or as a distributed set of services that can scale separately, as needed, for fetching, processing, and writing event log data to a storage provider.
+
+`mix-event-log-collector` is composed of 3 core components:
+1. `event log fetcher`: consumes event logs from an event log producer, such as mix log.api
+2. `event log processor`: validates, filters, transforms, and joins event logs
+3. `event log writer`: writes processed event logs to a storage provider such as 
+   * filesystem
+   * elasticsearch
+   * opensearch
+   * mongodb
+   * fluentd
+   * neap AFO/AFT
+   * mix log producer api
+
+Each component can be run as it's own command-line application allowing for independent scaling of components and the ability to re-process previously fetched event log data.
+
+This project also provides an `event-log-client` command-line application that wraps all three components mentioned above. This offers a simple stand-alone client that can be run locally and is designed for non-production scenarios such as dev and QA activities.
+
+<br/>
+
+### High-level Architecture
+![event-log-collector](./guides/resources/elc-high-level-architecture.png)
+
+The mix-event-log-collector implements a scalable and highly configurable data pipelining solution. The data pipeline supports:
+* Filesystem-backed FIFO queue when running as a local application
+* Kafka for a reliable, distributed message store
+* Redis pub/sub for a fast and simple message store
+* Pulsar for a cloud-native, multi-tenant, high-performance solution
+
+> For more information on the Mix Log API specification and how `log.api` works, please refer to the [online documentation](https://docs.mix.nuance.com/runtime-event-logs/#nuance-mix-runtime-event-logs).
+
+## Guides
+* [Quickstart Guide](./guides/quickstart-guide.md)
+* [Configuration Guide](./guides/configuration-guide.md)
+* [Developer Guide](./guides/developer-guide.md)
+* [Deployment Guide](./guides/deployment-guide.md)
+* [Monitoring Guide](./guides/monitoring-guide.md)
 
 ## Contributing
 

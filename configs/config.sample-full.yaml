@@ -1,0 +1,229 @@
+fetcher:
+    name: mix-log-api
+    config:
+        credentials:
+            auth_disabled: false
+            token_url: "https://auth.crt.nuance.com/oauth2/token"
+            scope: log
+            client_id: "Provide a Mix Client ID"
+            client_secret: Provide a Mix Client Secret
+            auth_timeout_ms: 5000
+        max_retries: -1
+        retry_delay: 5
+        record_check_frequency: 3
+        client_name: neap
+        consumer_group_id: "01" # values of 01 - 04 are supported
+        api_url: "https://log.api.nuance.com"
+        consumer_options:
+            auto.offset.reset: latest # specify earliest, latest, or none
+
+processor:
+    name: mix-default
+    config:
+        num_workers: 1
+        filter:
+            type: blacklist # blacklist or whitelist
+            content_type: [] # supports trailing wildcard. e.g. application/x-nuance-asr-recognitioninitmessage*
+        cache:
+            type: local # specify local or redis
+            # parameters for local cache
+            expiration: 2880
+            # parameters for redis cache
+            addr: localhost:6379
+            db: 0
+            default_ttl: 900
+            password: 
+
+writer:
+    name: filesystem # available options are filesystem, elasticsearch, opensearch, mongodb, fluentd, neap and mix-log-producer-api
+    config:
+        # all
+        num_workers: 5
+        
+        # filesystem + neap parameters
+        path: 'event-logs/my-app-name/' # provide a path for event logs to be written out to
+        
+        # audio_fetcher params available with the filesystem writer
+        audio_fetcher:
+            enabled: false # default is true
+            credentials:
+                auth_disabled: false
+                token_url: "https://auth.crt.nuance.com/oauth2/token"
+                scope: log
+                client_id: "Provide a Mix Client ID"
+                client_secret: Provide a Mix Client Secret
+                auth_timeout_ms: 5000
+            api_url: https://log.api.nuance.com/api/v1/audio
+
+        # neap
+        # max_records: 1000 # default is 1000 records per archive
+        # compression: gzip # gzip or zip. default is gzip
+
+        # fluentd
+        # address: 127.0.0.1:24224 # default value is localhost and fluentd's default port
+        # tag: Optional. By default the event log Topic will be used
+        # buffered: true # default value is false. Setting buffered to true masks write failures
+        # buffer_limit: # 8MB default. Specify integer value. e.g. 8388608 == 8 * 1024 * 1024
+
+        # elasticsearch + opensearch
+        doc_type: mix3-record
+        index_prefix: mix3-logs-v2
+        # append_date_to_index: false # default value is true
+        refresh: true
+        addresses:
+            - http://localhost:9200
+        # username: # optional
+        # password: # optional
+        # pipeline: # optional. Provide a valid ingest pipeline name. e.g. mix-event-log-pipeline
+        # retry_on_status: [502, 503, 504] # optional
+        # disable_retry: false # optional
+        # enable_retry_on_timeout: false # optional
+        # compress_request_body: false # optional
+        # discover_node_on_start: false # optional
+        # enable_metrics: false # optional
+        # enable_debug_logger: false # optional
+        # user_response_check_only: false # optional
+        # tls_config: # optional
+            # insecure_skip_verify: false # optional
+            # server_name: # optional
+
+        # additional elasticsearch only config options
+        # cloud_id: # optional
+        # api_key: # optional
+        # service_token: # optional
+        # certificate_fingerprint: # optional
+        # enable_compatibility_mode: false # optional
+        # disable_meta_header: false # optional
+
+        # mongodb
+        mongodb_uri: # Required. e.g. Azure Cosmos DB uri - "mongodb://<COSMOSDB_ACCOUNT_NAME>:<COSMOSDB_PASSWORD>@<COSMOSDB_ACCOUNT_NAME>.documents.azure.com:10255/?ssl=true&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@<COSMOSDB_ACCOUNT_NAME>@"
+        # database_name: # default is event-log-collector
+        # collection_name: # default is mix-event-logs
+
+        # mix-log-producer-api
+        credentials:
+            client_id: "Provide a Mix Client ID"
+            client_secret: Provide a Mix Client Secret
+        mix_log_producer_api_url: https://log.api.nuance.com/producers
+
+        # elasticsearch + opensearch + mongodb + +neap + mix-log-producer-api
+        rate_limit: 
+            limit: 10
+            burst: 1
+        
+        # elasticsearch + mongodb + mix-log-producer-api
+        max_retries: 10
+        delay: 10
+
+pipeline:
+    # data pipelining configuration requires readers and/or writers for each component (fetcher, processor, writer)
+    #
+    # fetcher (writer) ---> (reader) processor (writer) ---> (reader) writer
+    #
+    # embedded uses a local FIFO queue backed by local filesystem. This is a good option when running event-log-client in stand-alone mode
+    # for low event log traffic volumes (e.g. dev + debugging)
+    # 
+    # kafka is recommended when running components in distributed mode (e.g. each component deployed as it's own service in k8s) for scaling and
+    # message persistence/durability
+    storage_provider: embedded # available options are embedded, kafka, redis, and pulsar. 
+    fetcher:
+        writer:
+            # embedded
+            path: queues/my-app-name/fetcher # specify the name of your app you're collecting event logs for
+
+            # pulsar + redis
+            #host: 127.0.0.1:6650 # pulsar
+            host: 127.0.0.1:6379 # redis
+
+            # kafka
+            hosts:
+                - 127.0.0.1:9092
+
+            # pulsar
+            # operation_timeout: 30
+
+            # pulsar + kafka
+            topic: queues.fetcher
+
+            # redis
+            password: ""
+            DB: 0
+            channel: queues:fetcher
+
+    processor:
+        reader:
+            # embedded
+            path: queues/my-app-name/fetcher # specify the name of your app you're collecting event logs for
+
+            # pulsar + redis
+            #host: 127.0.0.1:6650 # pulsar
+            host: 127.0.0.1:6379 # redis
+            
+            # kaffka
+            hosts:
+                - 127.0.0.1:9092
+            # create_unique_group_id: false # default is true
+            
+            # pulsar
+            # operation_timeout: 30
+
+            # pulsar + kafka
+            group: elc
+            topic: queues.fetcher
+            offset: earliest
+            # auto_commit_offset_enabled: false # default is true
+
+            # redis
+            password: ""
+            DB: 0
+            channel: queues:fetcher
+        writer:
+            # embedded
+            path: queues/my-app-name/processor # specify the name of your app you're collecting event logs for
+            
+            # pulsar + redis
+            #host: 127.0.0.1:6650 # pulsar
+            host: 127.0.0.1:6379 # redis
+
+            # kafka
+            hosts:
+                - 127.0.0.1:9092
+
+            # pulsar
+            # operation_timeout: 30
+
+            # pulsar + kafka
+            topic: queues.processor
+    
+            # redis
+            password: ""
+            DB: 0
+            channel: queues:processor
+    
+    writer:
+        reader:
+            # embedded
+            path: queues/my-app-name/processor # specify the name of your app you're collecting event logs for
+
+            # pulsar + redis
+            #host: 127.0.0.1:6650 # pulsar
+            host: 127.0.0.1:6379 # redis
+
+            # kafka
+            hosts:
+                - 127.0.0.1:9092
+            # create_unique_group_id: false # default is true
+
+            # pulsar
+            # operation_timeout: 30
+
+            # pulsar + kafka
+            group: elc
+            topic: queues.processor
+            offset: earliest
+            # auto_commit_offset_enabled: false # default is true
+
+            # redis
+            password: ""
+            DB: 0
+            channel: queues:processor

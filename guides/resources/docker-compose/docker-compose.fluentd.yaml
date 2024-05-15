@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+
+  fluentd:
+    image: fluent/fluentd:v1.15-1
+    container_name: fluentd
+    volumes:
+      - ${PWD}/configs/fluentd/fluent.conf:/fluentd/etc/fluent.conf
+      - fluentd-data:/fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - event-log-collector
+
+volumes:
+  fluentd-data:
+    driver: local
+
+networks:
+  event-log-collector:
+    driver: bridge

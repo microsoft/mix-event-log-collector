@@ -1,0 +1,33 @@
+{{- if eq .Values.persistence.volumeType "nfs" "other"}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "event-log-collector.fullname" . }}
+  annotations:
+{{ toYaml .Values.configmap.annotations | indent 4 }}   
+  labels:
+{{ include "event-log-collector.labels" . | indent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+{{- if eq .Values.persistence.volumeType "other"}}
+  storageClassName: {{ .Values.persistence.other.storageClassName }}
+{{- else}}
+  storageClassName: ""
+{{- end}}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.storage }}
+{{- if eq .Values.persistence.volumeType "nfs"}}
+  selector:
+    matchLabels:
+{{ include "event-log-collector.labels" . | indent 6 }}
+{{- end}}
+{{- if eq .Values.persistence.volumeType "other"}}
+{{- if .Values.persistence.other.pvSelectors}}
+  selector:
+    matchLabels:
+{{ toYaml .Values.persistence.other.pvSelectors | indent 6 }}
+{{- end}}
+{{- end}}
+{{- end}}

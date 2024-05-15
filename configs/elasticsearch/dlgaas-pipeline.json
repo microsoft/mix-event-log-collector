@@ -1,0 +1,20 @@
+{
+  "description": "Pipeline processors specific to DLGaaS event logs",
+  "processors": [
+    {
+      "script": {
+        "source": "//flatten out event.value[].timeout if presented as a json object in the NII event logs\n\nfor (evt in ctx.value.data.events) {\n  if (evt.value.timeout != null && (evt.value.timeout instanceof Map)) {\n    for (key in evt.value.timeout.keySet()) {\n      evt.value[key + '.timeout'] = (long)evt.value.timeout[key]\n    }\n    evt.value.remove('timeout')\n  }\n}",
+        "if": "ctx.value.data.events != null &&\nctx.value.data.dataContentType == \"application/x-nuance-dlg-nii-logs.v1+json\"",
+        "tag": "dlgaas"
+      }
+    },
+    {
+      "script": {
+        "source": "// Add integer version of seqid key\nctx.value.data['seqid_as_int'] = Integer.parseInt(ctx.value.data.seqid);",
+        "if": "ctx.value.data.seqid != null &&\nctx.value.data.dataContentType == \"application/x-nuance-dlg-nii-logs.v1+json\"",
+        "tag": "dlgaas"
+      }
+    }
+  ],
+  "version": 2
+}

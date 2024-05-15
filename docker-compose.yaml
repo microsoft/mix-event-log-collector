@@ -1,0 +1,171 @@
+version: '3'
+services:
+  elc-log-fetcher:
+    image: <REPOSITORY>/event-log-collector:2.7.2
+    container_name: elc-log-fetcher
+    restart: unless-stopped
+    environment:
+      - ELC_ENABLE_MONITORING=1
+    depends_on:
+      - kafka
+    volumes:
+      - ./configs:/nuance/configs
+      - ./event-logs:/nuance/event-logs
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+    entrypoint: ["./bin/event-log-fetcher", "-c", "configs/config.docker.yaml"]
+  elc-log-processor:
+    image: <REPOSITORY>/event-log-collector:2.7.2
+    container_name: elc-log-processor
+    restart: unless-stopped
+    environment:
+      - ELC_ENABLE_MONITORING=1
+    depends_on:
+      - kafka
+    volumes:
+      - ./configs:/nuance/configs
+      - ./event-logs:/nuance/event-logs
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+    entrypoint: ["./bin/event-log-processor", "-c", "configs/config.docker.yaml"]
+  elc-log-writer:
+    image: <REPOSITORY>/event-log-collector:2.7.2
+    container_name: elc-log-writer
+    restart: unless-stopped
+    environment:
+      - ELC_ENABLE_MONITORING=1
+    depends_on:
+      - kafka
+    volumes:
+      - ./configs:/nuance/configs
+      - ./event-logs:/nuance/event-logs
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+    entrypoint: ["./bin/event-log-writer", "-c", "configs/config.docker.yaml"]
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - 6379:6379
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    hostname: kafka
+    restart: unless-stopped
+    ports:
+      # To learn about configuring Kafka for access across networks see
+      # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CLIENT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://localhost:9093,CLIENT://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: CLIENT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://localhost:9093,CLIENT://kafka:9092
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_CFG_DELETE_TOPIC_ENABLE: true
+      KAFKA_LOG_RETENTION_BYTES: 536870912
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 60000
+      KAFKA_LOG_RETENTION_MS: 60000 # 1 hr
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+  init-kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - kafka
+    entrypoint: ['/bin/sh', '-c']
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic queues.fetcher --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic queues.processor --replication-factor 1 --partitions 1
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    depends_on:
+      - broker
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    hostname: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+    command: --config.file=/etc/prometheus/prometheus.yaml
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+  grafana:
+    image: grafana/grafana-oss
+    container_name: grafana
+    hostname: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./configs/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./configs/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./configs/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./configs/grafana/dashboards:/etc/grafana/dashboards
+    networks:
+      - event-log-collector
+    security_opt:
+      - no-new-privileges:true
+networks:
+  event-log-collector:
+    driver: bridge

@@ -1,0 +1,18 @@
+{
+  "description": "Top-Level Pipeline for calling Xaas-secific pipelines",
+  "processors": [
+    {
+      "pipeline": {
+        "name": "dlgaas-pipeline",
+        "if": "ctx.key.service == \"DLGaaS\""
+      }
+    },
+    {
+      "pipeline": {
+        "name": "ttsaas-pipeline",
+        "if": "ctx.key.service == \"TTSaaS\""
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,20 @@
+{{- if eq .Values.persistence.volumeType "nfs"}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ template "event-log-collector.fullname" . }}
+  annotations:
+{{ toYaml .Values.configmap.annotations | indent 4 }}   
+  labels:
+{{ include "event-log-collector.labels" . | indent 4 }}
+spec:
+  storageClassName: ""
+  capacity:
+    storage: {{ .Values.persistence.storage }}
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: {{ .Values.persistence.nfs.server }}
+    path: {{ .Values.persistence.nfs.path | quote }}
+    readOnly: false
+{{- end}}
