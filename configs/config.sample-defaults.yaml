@@ -1,0 +1,5 @@
+fetcher:
+    config:
+        credentials:
+            client_id: "Provide a Mix Client ID"
+            client_secret: Provide a Mix Client Secret

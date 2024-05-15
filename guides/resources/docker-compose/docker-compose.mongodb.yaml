@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+
+  mongodb:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-data:/data/configdb
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - event-log-collector
+
+volumes:
+  mongodb-data:
+    driver: local
+
+networks:
+  event-log-collector:
+    driver: bridge

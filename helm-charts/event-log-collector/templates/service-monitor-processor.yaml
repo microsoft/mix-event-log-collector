@@ -1,0 +1,24 @@
+{{- if eq .Values.eventLogCollector.processor.enable true }}
+{{- if eq .Values.prometheusOperator.enable true}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ template "event-log-collector.fullname" . }}-processor
+  namespace: {{ .Values.prometheusOperator.namespace }}
+  labels:
+{{ toYaml .Values.prometheusOperator.serviceMonitor.labels | indent 4 }}
+    app: {{ template "event-log-collector.name" . }}
+    chart: {{ template "event-log-collector.chart" . }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "event-log-collector.name" . }}
+      release: {{ .Release.Name }}
+  namespaceSelector:
+    matchNames:
+    - {{ .Release.Namespace }}
+  endpoints:
+  - port: event-log-collector-svc-http
+{{- end}}
+{{- end}}

@@ -1,0 +1,6 @@
+writer:
+    name: fluentd
+    # config:
+        # buffered: true
+        # address: 127.0.0.1:24224
+        # buffer_limit: # 8MB default. Specify integer value. e.g. 8388608 == 8 * 1024 * 1024

@@ -1,0 +1,15 @@
+writer:
+    name: neap
+    config:
+        # path: neap-logs
+        max_records: 10
+
+pipeline:
+    storage_provider: kafka
+    writer:
+        reader:
+            ## Required
+            hosts:
+                - 127.0.0.1:9092 # provide a valid kafka host
+            group: elc
+            topic: queues.processor # provide a valid topic

@@ -1,0 +1,20 @@
+writer:
+    name: fluentd
+    # config:
+        # buffered: true
+        # address: 127.0.0.1:24224
+        # buffer_limit: # 8MB default. Specify integer value. e.g. 8388608 == 8 * 1024 * 1024
+
+pipeline:
+    storage_provider: kafka
+    writer:
+        reader:
+            ## Required
+            hosts:
+                - 127.0.0.1:9092                
+            group: elc
+            topic: queues.processor
+
+            ## Optional                
+            # offset: earliest # default is none
+            # auto_commit_offset_enabled: false # default is true

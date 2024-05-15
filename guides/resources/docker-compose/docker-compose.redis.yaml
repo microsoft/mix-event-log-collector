@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    hostname: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - event-log-collector
+
+volumes:    
+  redis-data:
+    driver: local  
+  
+networks:
+  event-log-collector:
+    driver: bridge   

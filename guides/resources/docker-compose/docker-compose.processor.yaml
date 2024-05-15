@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+
+  elc-log-processor:
+    build: .
+    container_name: elc-log-processor
+    restart: unless-stopped
+    environment:
+      - ELC_ENABLE_MONITORING=1
+    depends_on:
+      - kafka
+      - redis
+    volumes:
+      - ${PWD}/configs/config.distributed-docker-compose.yaml:/nuance/configs/config.yaml
+    entrypoint: [ "./bin/event-log-processor", "-c", "configs/config.yaml" ]
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - event-log-collector
+
+networks:
+  event-log-collector:
+    driver: bridge

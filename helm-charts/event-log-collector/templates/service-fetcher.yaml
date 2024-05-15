@@ -1,0 +1,36 @@
+{{- if eq .Values.eventLogCollector.fetcher.enable true }}
+{{- if eq .Values.http.enable true }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "event-log-collector.fullname" . }}-fetcher
+  labels:
+    app: {{ template "event-log-collector.name" . }}
+    chart: {{ template "event-log-collector.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    service: {{ template "event-log-collector.fullname" . }}
+{{- if .Values.image.tag }}
+    image: {{ .Values.image.tag }}
+{{- end }}
+{{- if .Values.deployment.serviceLabels }}
+{{- toYaml .Values.deployment.serviceLabels | nindent 4 }}
+{{- end }}
+  annotations:
+{{ toYaml .Values.service.annotations | indent 4 }}
+spec:
+  {{- if .Values.service.clusterIP }}
+  clusterIP: None
+  {{- end }}
+  ports:
+  - name: event-log-collector-svc-http
+    port: {{ .Values.service.httpPort }}
+    protocol: TCP
+    targetPort: elc-http
+  selector:
+    app.kubernetes.io/name: {{ include "event-log-collector.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  sessionAffinity: None
+  type: {{ .Values.service.type }}
+{{- end }}
+{{- end }}

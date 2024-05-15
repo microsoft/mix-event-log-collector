@@ -1,0 +1,13 @@
+{
+  "description": "Pipeline processors specific to TTSaaS event logs",
+  "processors": [
+    {
+      "script": {
+        "source": "// events.DURS can be either a long or float in the TTS event logs.\n// although there may be some data loss, the choice here is to convert to long\n\nfor (evt in ctx.value.data.response.events) {\n  if (evt.DURS != null) {\n    evt.DURS = (long)evt.DURS\n  }\n}",
+        "if": "ctx.key.service == \"TTSaaS\" &&\nctx.value.data.response.events != null",
+        "tag": "ttsaas"
+      }
+    }
+  ],
+  "version": 1
+}

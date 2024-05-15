@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    hostname: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ${PWD}/configs/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - monitoring-prometheus-data:/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yaml
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - event-log-collector
+
+  grafana:
+    image: grafana/grafana-oss
+    container_name: grafana
+    hostname: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${PWD}/configs/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ${PWD}/configs/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ${PWD}/configs/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ${PWD}/configs/grafana/dashboards:/etc/grafana/dashboards
+      - monitoring-grafana-data:/etc/grafana/
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - event-log-collector
+
+volumes:
+  monitoring-grafana-data:
+    driver: local
+  monitoring-prometheus-data:
+    driver: local
+
+networks:
+  event-log-collector:
+    driver: bridge

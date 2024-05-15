@@ -1,0 +1,4 @@
+fetcher:
+    config:
+        consumer_options:
+            auto.offset.reset: earliest

@@ -1,0 +1,3477 @@
+{{- if eq .Values.grafana.enabled true}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ template "event-log-collector.fullname" . }}-grafana
+  annotations:
+{{ toYaml .Values.grafana.configmap.annotations | indent 4 }}
+  labels:
+    app: {{ template "event-log-collector.name" . }}
+    chart: {{ template "event-log-collector.chart" . }}
+    release: {{ .Release.Name }}
+{{ toYaml .Values.grafana.selectorLabels | indent 4 }}
+data:
+  {{ template "event-log-collector.fullname" . }}-grafana-dashboard.json: |-
+    {
+    "annotations": {
+        "list": [
+        {
+            "builtIn": 1,
+            "datasource": {
+            "type": "datasource",
+            "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+            "limit": 100,
+            "matchAny": false,
+            "tags": [],
+            "type": "dashboard"
+            },
+            "type": "dashboard"
+        }
+        ]
+    },
+    "description": "Event Log Collector Monitoring Dashboard",
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 29,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+        "collapsed": true,
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+        },
+        "id": 10,
+        "panels": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "thresholds"
+                },
+                "mappings": [],
+                "max": 32,
+                "min": 0,
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    }
+                    ]
+                }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 1
+            },
+            "id": 4,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                "calcs": [
+                    "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "9.3.8",
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_partitions_total{namespace=~\"^($namespace)$\",service=~\"^(.*)(-event-log-collector-fetcher)$\"}) by (topic)",
+                "format": "time_series",
+                "instant": false,
+                "interval": "",
+                "intervalFactor": 1,
+                "legendFormat": "{{`{{topic}}`}}",
+                "refId": "A"
+                }
+            ],
+            "title": "Total Partitions",
+            "type": "gauge"
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 16,
+                "x": 8,
+                "y": 1
+            },
+            "hiddenSeries": false,
+            "id": 72,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "hideEmpty": false,
+                "hideZero": false,
+                "max": false,
+                "min": false,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_fetcher_offset_behind{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\",  service=~\"^(.*)(-event-log-collector-fetcher)$\"}) by (topic, partition)",
+                "format": "time_series",
+                "instant": false,
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}, (p{{`{{partition}}`}})",
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_fetcher_offset_behind{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\",  service=~\"^(.*)(-event-log-collector-fetcher)$\"}) by (topic)",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}-Total",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Event Log Backlog per Partition",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:22968",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:22969",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": true,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                "unit": "short"
+                },
+                "overrides": []
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 11,
+                "w": 8,
+                "x": 0,
+                "y": 9
+            },
+            "hiddenSeries": false,
+            "id": 88,
+            "legend": {
+                "avg": false,
+                "current": true,
+                "hideEmpty": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": true,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": true,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_processing_errors{namespace=\"$namespace\", topic=\"$topic\"}) by (service, code, message)",
+                "format": "time_series",
+                "instant": false,
+                "interval": "",
+                "intervalFactor": 1,
+                "legendFormat": "{{`{{service}}`}}: {{`{{code}}`}}",
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Processing Errors",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:707",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:708",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 11,
+                "w": 9,
+                "x": 8,
+                "y": 9
+            },
+            "hiddenSeries": false,
+            "id": 18,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 2,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_processing_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (topic, component, status, code, message)",
+                "interval": "",
+                "legendFormat": "{{`{{component}}`}}: {{`{{message}}`}}",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_processing_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (topic)",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "Total",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Total Logs Processed",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "transformations": [
+                {
+                "id": "calculateField",
+                "options": {
+                    "alias": "filesystem write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "filesystem write "
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    },
+                    "replaceFields": false
+                }
+                },
+                {
+                "id": "calculateField",
+                "options": {
+                    "alias": "mix3 write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "mix3 write "
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    },
+                    "replaceFields": false
+                }
+                },
+                {
+                "id": "calculateField",
+                "options": {
+                    "alias": "s3/minio write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "s3/minio write"
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    }
+                }
+                },
+                {
+                "id": "calculateField",
+                "options": {
+                    "alias": "elasticsearch write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "elasticsearch write"
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    }
+                }
+                }
+            ],
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:25",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:26",
+                "format": "short",
+                "logBase": 1,
+                "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "palette-classic"
+                },
+                "custom": {
+                    "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                    }
+                },
+                "mappings": []
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 11,
+                "w": 7,
+                "x": 17,
+                "y": 9
+            },
+            "id": 81,
+            "options": {
+                "displayLabels": [
+                "percent"
+                ],
+                "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": [
+                    "percent",
+                    "value"
+                ]
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                "calcs": [
+                    "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+                },
+                "tooltip": {
+                "mode": "single",
+                "sort": "none"
+                }
+            },
+            "pluginVersion": "8.1.5",
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_processing_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (component, status, code, message)",
+                "interval": "",
+                "legendFormat": "{{`{{component}}`}}: {{`{{message}}`}}",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_filesystem_write_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\", pod=~\"^($pod)$\"}) by (pod)",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "filesystem write ",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "title": "Total Logs Processed",
+            "transformations": [
+                {
+                "disabled": true,
+                "id": "calculateField",
+                "options": {
+                    "alias": "filesystem write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "filesystem write "
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    },
+                    "replaceFields": false
+                }
+                },
+                {
+                "disabled": true,
+                "id": "calculateField",
+                "options": {
+                    "alias": "mix3 write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "mix3 write "
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    },
+                    "replaceFields": false
+                }
+                },
+                {
+                "disabled": true,
+                "id": "calculateField",
+                "options": {
+                    "alias": "s3/minio write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "s3/minio write"
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    }
+                }
+                },
+                {
+                "disabled": true,
+                "id": "calculateField",
+                "options": {
+                    "alias": "elasticsearch write lag",
+                    "binary": {
+                    "left": "nuance-mix3, Processed",
+                    "operator": "-",
+                    "reducer": "sum",
+                    "right": "elasticsearch write"
+                    },
+                    "mode": "binary",
+                    "reduce": {
+                    "reducer": "sum"
+                    }
+                }
+                }
+            ],
+            "type": "piechart"
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "description": "",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 20
+            },
+            "hiddenSeries": false,
+            "id": 16,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": true,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "avg(elc_message_processing_duration{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (component, status, code, message)",
+                "instant": false,
+                "interval": "",
+                "legendFormat": "{{`{{component}}`}} | {{`{{status}}`}} | {{`{{message}}`}}",
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Log Processing Duration (ms)",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:342",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:343",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 0,
+                "y": 28
+            },
+            "hiddenSeries": false,
+            "id": 12,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_in{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (topic, component)",
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}: {{`{{component}}`}}",
+                "range": true,
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Total Records In",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:260",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:261",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 28
+            },
+            "hiddenSeries": false,
+            "id": 83,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_out{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (topic, component)",
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}: {{`{{component}}`}}",
+                "range": true,
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Total Records Out",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:260",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:261",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "palette-classic"
+                },
+                "custom": {
+                    "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                    }
+                },
+                "mappings": []
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 8,
+                "x": 0,
+                "y": 38
+            },
+            "id": 82,
+            "options": {
+                "displayLabels": [
+                "percent",
+                "name"
+                ],
+                "legend": {
+                "displayMode": "list",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": []
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                "calcs": [
+                    "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+                },
+                "tooltip": {
+                "mode": "single",
+                "sort": "none"
+                }
+            },
+            "pluginVersion": "8.1.5",
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_in{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\", component=\"fetcher\"}) by (topic)",
+                "interval": "",
+                "legendFormat": "in",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_out{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\", component=\"fetcher\"}) by (topic)",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "out",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "title": "Total Records In / Out (Fetcher)",
+            "type": "piechart"
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "palette-classic"
+                },
+                "custom": {
+                    "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                    }
+                },
+                "mappings": []
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 8,
+                "x": 8,
+                "y": 38
+            },
+            "id": 84,
+            "options": {
+                "displayLabels": [
+                "percent",
+                "name"
+                ],
+                "legend": {
+                "displayMode": "list",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": []
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                "calcs": [
+                    "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+                },
+                "tooltip": {
+                "mode": "single",
+                "sort": "none"
+                }
+            },
+            "pluginVersion": "8.1.5",
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_in{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\", component=\"processor\"}) by (topic)",
+                "interval": "",
+                "legendFormat": "in",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_out{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\", component=\"processor\"}) by (topic)",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "out",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "title": "Total Records In / Out (Processor)",
+            "type": "piechart"
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "palette-classic"
+                },
+                "custom": {
+                    "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                    }
+                },
+                "mappings": []
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 8,
+                "x": 16,
+                "y": 38
+            },
+            "id": 85,
+            "options": {
+                "displayLabels": [
+                "percent",
+                "name"
+                ],
+                "legend": {
+                "displayMode": "list",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": []
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                "calcs": [
+                    "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+                },
+                "tooltip": {
+                "mode": "single",
+                "sort": "none"
+                }
+            },
+            "pluginVersion": "8.1.5",
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_in{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\", component=\"writer\"}) by (topic)",
+                "interval": "",
+                "legendFormat": "in",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_num_records_out{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\", component=\"writer\"}) by (topic)",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "out",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "title": "Total Records In / Out (Writer)",
+            "type": "piechart"
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 0,
+                "y": 48
+            },
+            "hiddenSeries": false,
+            "id": 86,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "avg(elc_lag_in{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (topic, component)",
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}: {{`{{component}}`}}",
+                "range": true,
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Avg Lag In",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:260",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:261",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 10,
+                "w": 12,
+                "x": 12,
+                "y": 48
+            },
+            "hiddenSeries": false,
+            "id": 87,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "avg(elc_lag_out{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}) by (topic, component)",
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}: {{`{{component}}`}}",
+                "range": true,
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Avg Lag Out",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:260",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:261",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 58
+            },
+            "hiddenSeries": false,
+            "id": 76,
+            "interval": "1m",
+            "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "hideEmpty": false,
+                "max": true,
+                "min": true,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(rate(elc_num_records_in{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}[1m])) by (topic, component)",
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}: {{`{{component}}`}}",
+                "range": true,
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Component Read Throughput ( op/s )",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:338",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:339",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 9,
+                "w": 24,
+                "x": 0,
+                "y": 66
+            },
+            "hiddenSeries": false,
+            "id": 78,
+            "interval": "1m",
+            "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(increase(elc_num_records_in{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", topic=~\"^($topic)$\"}[1m])) by (topic, component)",
+                "interval": "",
+                "legendFormat": "{{`{{topic}}`}}: {{`{{component}}`}}",
+                "range": true,
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Consumer Read Increase ( op/m ) ",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:422",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:423",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            }
+        ],
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "refId": "A"
+            }
+        ],
+        "title": "Event Log Collector Components",
+        "type": "row"
+        },
+        {
+        "collapsed": true,
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 1
+        },
+        "id": 20,
+        "panels": [
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 10,
+                "w": 24,
+                "x": 0,
+                "y": 2
+            },
+            "hiddenSeries": false,
+            "id": 24,
+            "legend": {
+                "alignAsTable": true,
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_elasticsearch_commit_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", service=~\"^(.*)(-event-log-collector-writer)$\"}) by (code)",
+                "interval": "",
+                "legendFormat": "Elasticsearch: {{`{{code}}`}}",
+                "range": true,
+                "refId": "Mix3"
+                },
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_log_writes_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", service=~\"(.*)-event-log-collector-writer\"}) by (status)",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "Filesystem: {{`{{code}}`}}",
+                "range": true,
+                "refId": "Filesystem: {{`{{code}}`}}"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Storage Provider Writes in Total",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:1010",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:1011",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "thresholds"
+                },
+                "mappings": [],
+                "noValue": "N/A",
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    }
+                    ]
+                }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 12
+            },
+            "id": 36,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                "calcs": [
+                    "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "9.3.8",
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_elasticsearch_commit_total{code=~\"2..\",cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", service=~\"^(.*)(-event-log-collector-writer)$\"})",
+                "interval": "",
+                "legendFormat": "",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_opensearch_commit_total{code=~\"2..\",cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", service=~\"^(.*)(-event-log-collector-writer)$\"})",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "title": "ElasticSearch / Opensearch Write Success Total",
+            "type": "gauge"
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "thresholds"
+                },
+                "mappings": [],
+                "noValue": "N/A",
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    },
+                    {
+                        "color": "red",
+                        "value": 80
+                    }
+                    ]
+                }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 12
+            },
+            "id": 37,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                "calcs": [
+                    "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "9.3.8",
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_elasticsearch_commit_total{code!~\"2..\",cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", service=~\"^(.*)(-event-log-collector-writer)$\"}) by (code)",
+                "instant": false,
+                "interval": "",
+                "legendFormat": "{{`{{code}}`}}: {{`{{message}}`}}",
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_opensearch_commit_total{code!~\"2..\",cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", service=~\"^(.*)(-event-log-collector-writer)$\"}) by (code)",
+                "hide": false,
+                "instant": false,
+                "interval": "",
+                "legendFormat": "{{`{{code}}`}}: {{`{{message}}`}}",
+                "refId": "B"
+                }
+            ],
+            "title": "ElasticSearch / Opensearch  Write Failure Total",
+            "type": "gauge"
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 2,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 12
+            },
+            "hiddenSeries": false,
+            "id": 64,
+            "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "rightSide": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 2,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "avg(elc_commit_duration_seconds_sum{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"} / elc_commit_duration_seconds_count{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"})",
+                "format": "time_series",
+                "interval": "",
+                "legendFormat": "Elasticsearch",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "avg(elc_opensearch_commit_duration_seconds_sum{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"} / elc_opensearch_commit_duration_seconds_count{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"})",
+                "format": "time_series",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "Opensearch",
+                "range": true,
+                "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Elasticsearch / Opensearch Average Write Latency",
+            "tooltip": {
+                "shared": false,
+                "sort": 1,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:138",
+                "format": "s",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:139",
+                "format": "short",
+                "logBase": 1,
+                "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 0,
+                "y": 20
+            },
+            "hiddenSeries": false,
+            "id": 80,
+            "interval": "30s",
+            "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "hideEmpty": false,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 2,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(rate(elc_elasticsearch_commit_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"}[1m])) by (code)",
+                "interval": "",
+                "intervalFactor": 1,
+                "legendFormat": "Elasticsearch ({{`{{code}}`}})",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(rate(elc_storage_write_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", pod=\"$pod\"}[1m]))",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "Filesystem",
+                "range": true,
+                "refId": "B"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(rate(elc_opensearch_commit_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"}[1m])) by (code)",
+                "hide": false,
+                "interval": "",
+                "intervalFactor": 1,
+                "legendFormat": "Opensearch ({{`{{code}}`}})",
+                "range": true,
+                "refId": "C"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Storage Provider Write Throughput ( op/s ) ",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:102",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:103",
+                "format": "short",
+                "logBase": 1,
+                "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 9,
+                "w": 12,
+                "x": 12,
+                "y": 20
+            },
+            "hiddenSeries": false,
+            "id": 54,
+            "interval": "30s",
+            "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": true,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 2,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.3.8",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(increase(elc_elasticsearch_commit_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"}[1m])) by (code)",
+                "interval": "",
+                "intervalFactor": 1,
+                "legendFormat": "Elasticsearch ({{`{{code}}`}})",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(increase(elc_opensearch_commit_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"}[1m])) by (code)",
+                "hide": false,
+                "interval": "",
+                "intervalFactor": 1,
+                "legendFormat": "Opensearch ({{`{{code}}`}})",
+                "range": true,
+                "refId": "E"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(increase(elc_storage_write_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", pod=\"$pod\"}[1m]))",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "Filesystem",
+                "range": true,
+                "refId": "B"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "exemplar": true,
+                "expr": "sum(increase(elc_elasticsearch_write_total{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}[1m]))",
+                "hide": true,
+                "interval": "",
+                "legendFormat": "ElasticSearch",
+                "refId": "C"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "exemplar": true,
+                "expr": "sum(increase(elc_s3_write_total{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}[1m]))",
+                "hide": true,
+                "interval": "",
+                "legendFormat": "S3/minio",
+                "refId": "D"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Storage Provider Writes Increase ( op/m )",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:102",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:103",
+                "format": "short",
+                "logBase": 1,
+                "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            }
+        ],
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "refId": "A"
+            }
+        ],
+        "title": "Storage Provider Metrics",
+        "type": "row"
+        },
+        {
+        "collapsed": true,
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 2
+        },
+        "id": 66,
+        "panels": [
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "Displays the number of event logs pushed to dead letter queue due to some transient errors.",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 3
+            },
+            "hiddenSeries": false,
+            "id": 70,
+            "legend": {
+                "alignAsTable": false,
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "rightSide": true,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.2.4",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "exemplar": true,
+                "expr": "sum(elc_dead_letter_records_total{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (pod, producer)",
+                "interval": "",
+                "legendFormat": "{{`{{producer}}`}}",
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Dead Letter Records Total",
+            "tooltip": {
+                "shared": false,
+                "sort": 1,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "The number of dead letter itself. a dead letter contains one or more event records. ",
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 3
+            },
+            "hiddenSeries": false,
+            "id": 68,
+            "legend": {
+                "avg": false,
+                "current": true,
+                "max": false,
+                "min": false,
+                "rightSide": true,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.2.4",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "exemplar": true,
+                "expr": "sum(elc_dead_letter_total{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (pod, producer)",
+                "interval": "",
+                "legendFormat": "{{`{{producer}}`}}",
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Dead Letter Total",
+            "tooltip": {
+                "shared": false,
+                "sort": 1,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            }
+        ],
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "refId": "A"
+            }
+        ],
+        "title": "Dead Letter ",
+        "type": "row"
+        },
+        {
+        "collapsed": true,
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 3
+        },
+        "id": 39,
+        "panels": [
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 10,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 10,
+                "w": 24,
+                "x": 0,
+                "y": 4
+            },
+            "hiddenSeries": false,
+            "id": 43,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 0,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.2.4",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+                {
+                "$$hashKey": "object:90",
+                "alias": "requests",
+                "color": "#F2495C",
+                "fill": 0,
+                "hideTooltip": true,
+                "legend": true,
+                "linewidth": 2,
+                "stack": false
+                },
+                {
+                "$$hashKey": "object:138",
+                "alias": "limits",
+                "color": "#FF9830",
+                "fill": 0,
+                "hideTooltip": true,
+                "legend": true,
+                "linewidth": 2,
+                "stack": false
+                }
+            ],
+            "spaceLength": 10,
+            "stack": true,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"}) by (container)",
+                "interval": "",
+                "legendFormat": "{{`{{container}}`}}",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(\n    kube_pod_container_resource_requests{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", resource=\"cpu\"}\n)\n",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "requests",
+                "range": true,
+                "refId": "B"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "exemplar": true,
+                "expr": "sum(\n    kube_pod_container_resource_limits{cluster=\"$cluster\", namespace=\"$namespace\", resource=\"cpu\"}\n)\n",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "limits",
+                "refId": "C"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "CPU Usage",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:72",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:73",
+                "format": "short",
+                "logBase": 1,
+                "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            }
+        ],
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "refId": "A"
+            }
+        ],
+        "title": "CPU Usage",
+        "type": "row"
+        },
+        {
+        "collapsed": true,
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 4
+        },
+        "id": 41,
+        "panels": [
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fill": 10,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 11,
+                "w": 24,
+                "x": 0,
+                "y": 5
+            },
+            "hiddenSeries": false,
+            "id": 45,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 0,
+            "nullPointMode": "null as zero",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.2.4",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+                {
+                "$$hashKey": "object:237",
+                "alias": "requests",
+                "color": "#F2495C",
+                "dashes": true,
+                "fill": 0,
+                "hideTooltip": true,
+                "legend": true,
+                "linewidth": 2,
+                "stack": false
+                },
+                {
+                "$$hashKey": "object:299",
+                "alias": "limits",
+                "color": "#FF9830",
+                "dashes": true,
+                "fill": 0,
+                "hideTooltip": true,
+                "legend": true,
+                "linewidth": 2,
+                "stack": false
+                }
+            ],
+            "spaceLength": 10,
+            "stack": true,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(container_memory_working_set_bytes{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", container!=\"\", image!=\"\"}) by (container)",
+                "interval": "",
+                "intervalFactor": 2,
+                "legendFormat": "{{`{{container}}`}}",
+                "range": true,
+                "refId": "A"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(\n    kube_pod_container_resource_requests{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", resource=\"memory\"}\n)\n",
+                "hide": false,
+                "interval": "",
+                "intervalFactor": 2,
+                "legendFormat": "requests",
+                "range": true,
+                "refId": "B"
+                },
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(\n    kube_pod_container_resource_limits{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\", resource=\"memory\"}\n)\n",
+                "hide": false,
+                "interval": "",
+                "legendFormat": "limits",
+                "range": true,
+                "refId": "C"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Memory Usage",
+            "tooltip": {
+                "shared": false,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:367",
+                "format": "bytes",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:368",
+                "format": "short",
+                "logBase": 1,
+                "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            }
+        ],
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "refId": "A"
+            }
+        ],
+        "title": "Memory Usage",
+        "type": "row"
+        },
+        {
+        "collapsed": true,
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 5
+        },
+        "id": 8,
+        "panels": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "palette-classic"
+                },
+                "custom": {
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                    },
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                    "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "spanNulls": false,
+                    "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                    "mode": "off"
+                    }
+                },
+                "mappings": [],
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    }
+                    ]
+                }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 15,
+                "w": 24,
+                "x": 0,
+                "y": 107
+            },
+            "id": 6,
+            "options": {
+                "legend": {
+                "calcs": [],
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true
+                },
+                "tooltip": {
+                "mode": "single",
+                "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_http_requests_total{cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"}) by (http_url,http_response_status)",
+                "interval": "",
+                "legendFormat": "{{`{{http_url}}`}}, {{`{{http_response_status}}`}}",
+                "range": true,
+                "refId": "A"
+                }
+            ],
+            "title": "Http Requests",
+            "type": "timeseries"
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "thresholds"
+                },
+                "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    }
+                    ]
+                }
+                },
+                "overrides": [
+                {
+                    "matcher": {
+                    "id": "byName",
+                    "options": "Value"
+                    },
+                    "properties": [
+                    {
+                        "id": "custom.width"
+                    },
+                    {
+                        "id": "custom.displayMode",
+                        "value": "basic"
+                    }
+                    ]
+                }
+                ]
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 24,
+                "x": 0,
+                "y": 122
+            },
+            "id": 26,
+            "options": {
+                "footer": {
+                "fields": "",
+                "reducer": [
+                    "sum"
+                ],
+                "show": false
+                },
+                "frameIndex": 1,
+                "showHeader": true,
+                "sortBy": [
+                {
+                    "desc": true,
+                    "displayName": "Value"
+                }
+                ]
+            },
+            "pluginVersion": "9.2.4",
+            "targets": [
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                },
+                "editorMode": "code",
+                "exemplar": true,
+                "expr": "sum(elc_http_requests_total{http_response_code=~\"2..\",cluster=~\"^($cluster)$\", namespace=~\"^($namespace)$\"}) by (http_url)",
+                "format": "table",
+                "instant": true,
+                "interval": "",
+                "legendFormat": "URL: {{`{{http_url}}`}}",
+                "refId": "A"
+                }
+            ],
+            "title": "Http Response Code 2XX Total ",
+            "type": "table"
+            },
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                "color": {
+                    "mode": "thresholds"
+                },
+                "custom": {
+                    "align": "center",
+                    "displayMode": "auto",
+                    "inspect": false
+                },
+                "mappings": [],
+                "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                    {
+                        "color": "green",
+                        "value": null
+                    }
+                    ]
+                }
+                },
+                "overrides": [
+                {
+                    "matcher": {
+                    "id": "byName",
+                    "options": "http_url"
+                    },
+                    "properties": [
+                    {
+                        "id": "custom.width",
+                        "value": 437
+                    }
+                    ]
+                }
+                ]
+            },
+            "gridPos": {
+                "h": 7,
+                "w": 24,
+                "x": 0,
+                "y": 132
+            },
+            "id": 28,
+            "options": {
+                "footer": {
+                "fields": "",
+                "reducer": [
+                    "sum"
+                ],
+                "show": false
+                },
+                "showHeader": true,
+                "sortBy": []
+            },
+            "pluginVersion": "9.2.4",
+            "targets": [
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                },
+                "exemplar": true,
+                "expr": "sum(elc_http_requests_total{http_response_code!~\"2..\",cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}) by (pod, http_url,http_response_code)",
+                "format": "table",
+                "instant": true,
+                "interval": "",
+                "legendFormat": "",
+                "refId": "A"
+                }
+            ],
+            "title": "Http Response Code 3/4/5XX Total ",
+            "type": "table"
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 139
+            },
+            "hiddenSeries": false,
+            "id": 62,
+            "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "hideZero": false,
+                "max": true,
+                "min": true,
+                "rightSide": true,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "8.1.5",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "exemplar": true,
+                "expr": "elc_http_request_duration_seconds_current{cluster=\"$cluster\", namespace=\"$namespace\", pod=\"$pod\"}",
+                "interval": "",
+                "legendFormat": "{{`{{path}}`}}",
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Http Request Duration in Seconds - Current",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:113",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:114",
+                "format": "short",
+                "logBase": 1,
+                "show": false
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            }
+        ],
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "refId": "A"
+            }
+        ],
+        "title": "Network",
+        "type": "row"
+        },
+        {
+        "collapsed": true,
+        "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+        },
+        "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 6
+        },
+        "id": 49,
+        "panels": [
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 15,
+                "w": 12,
+                "x": 0,
+                "y": 7
+            },
+            "hiddenSeries": false,
+            "id": 47,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "hideEmpty": false,
+                "hideZero": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.2.4",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "uid": "${datasource}"
+                },
+                "exemplar": true,
+                "expr": "go_goroutines{namespace=~\"^($namespace)$\",pod=~\"^($pod)$\"}",
+                "interval": "",
+                "legendFormat": "{{`{{pod}}`}}",
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "Goroutines",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:122",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:123",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            },
+            {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 15,
+                "w": 12,
+                "x": 12,
+                "y": 7
+            },
+            "hiddenSeries": false,
+            "id": 51,
+            "legend": {
+                "alignAsTable": true,
+                "avg": true,
+                "current": true,
+                "max": true,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": true
+            },
+            "lines": true,
+            "linewidth": 2,
+            "nullPointMode": "connected",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "9.2.4",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "prometheus"
+                },
+                "exemplar": true,
+                "expr": "go_gc_duration_seconds{cluster=\"$cluster\",namespace=~\"^($namespace)$\",pod=~\"^($pod)$\"}",
+                "interval": "",
+                "legendFormat": " {{`{{quantile}}`}}",
+                "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeRegions": [],
+            "title": "GC duration quantiles",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                "$$hashKey": "object:15586",
+                "format": "s",
+                "logBase": 1,
+                "show": true
+                },
+                {
+                "$$hashKey": "object:15587",
+                "format": "short",
+                "logBase": 1,
+                "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false
+            }
+            }
+        ],
+        "targets": [
+            {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "refId": "A"
+            }
+        ],
+        "title": "Go Processes",
+        "type": "row"
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 37,
+    "style": "dark",
+    "tags": [
+        "event-log-collector",
+        "v2.x.x"
+    ],
+    "templating": {
+        "list": [
+        {
+            "current": {
+            "selected": false,
+            "text": "Prometheus",
+            "value": "Prometheus"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "prometheus",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "type": "datasource"
+        },
+        {
+            "current": {
+            "isNone": true,
+            "selected": false,
+            "text": "None",
+            "value": ""
+            },
+            "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+            },
+            "definition": "label_values(up{job=\"kube-state-metrics\"}, cluster)",
+            "hide": 2,
+            "includeAll": false,
+            "multi": false,
+            "name": "cluster",
+            "options": [],
+            "query": {
+            "query": "label_values(up{job=\"kube-state-metrics\"}, cluster)",
+            "refId": "StandardVariableQuery"
+            },
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "type": "query"
+        },
+        {
+            "current": {
+            "selected": true,
+            "text": [
+                "All"
+            ],
+            "value": [
+                "$__all"
+            ]
+            },
+            "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+            },
+            "definition": "label_values(kube_namespace_status_phase{job=\"kube-state-metrics\", cluster=\"$cluster\"}, namespace)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "name": "namespace",
+            "options": [],
+            "query": {
+            "query": "label_values(kube_namespace_status_phase{job=\"kube-state-metrics\", cluster=\"$cluster\"}, namespace)",
+            "refId": "StandardVariableQuery"
+            },
+            "refresh": 2,
+            "regex": "/analytics*/",
+            "skipUrlSync": false,
+            "sort": 1,
+            "type": "query"
+        },
+        {
+            "current": {
+            "selected": true,
+            "text": [
+                "All"
+            ],
+            "value": [
+                "$__all"
+            ]
+            },
+            "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+            },
+            "definition": "label_values(kube_pod_info{cluster=\"$cluster\", namespace=\"$namespace\"}, pod)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "name": "pod",
+            "options": [],
+            "query": {
+            "query": "label_values(kube_pod_info{cluster=\"$cluster\", namespace=\"$namespace\"}, pod)",
+            "refId": "StandardVariableQuery"
+            },
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "type": "query"
+        },
+        {
+            "current": {
+            "selected": true,
+            "text": [
+                "All"
+            ],
+            "value": [
+                "$__all"
+            ]
+            },
+            "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+            },
+            "definition": "label_values(topic)",
+            "hide": 0,
+            "includeAll": true,
+            "multi": true,
+            "name": "topic",
+            "options": [],
+            "query": {
+            "query": "label_values(topic)",
+            "refId": "StandardVariableQuery"
+            },
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "type": "query"
+        }
+        ]
+    },
+    "time": {
+        "from": "now-3h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Event Log Collector Dashboard",
+    "uid": "elc0135",
+    "version": 8,
+    "weekStart": ""
+    }
+{{- end}}

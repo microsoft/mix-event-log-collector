@@ -1,0 +1,193 @@
+replicaCount: 1
+strategy:
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+revisionHistoryLimit: 10
+image:
+  # Provide a valid repository 
+  repository: <REPOSITORY>/event-log-collector
+  tag: 2.7.2
+  pullPolicy: Always
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+# Provide valid environments vars for your deployment
+environment:
+  ELC_ENABLE_LOGGING_TO_FILE: true
+  ELC_CONFIG: configs/config.yaml
+  ELC_ENABLE_DEBUG_LOGGING: false
+  # ELC_CLIENT_ID: Required. <provide value or pull from vault or specify in config.yaml>
+  # ELC_CLIENT_SECRET: Required. <provide value or pull from vault or specify in config.yaml>
+  # ELC_TOKEN_URL: Optional. Applies to log `fetcher` when set to use `mix-log-api`
+  # ELC_API_URL: Optional. Applies to log `fetcher` when set to use `mix-log-api`
+  # ELC_CONSUMER_GROUP_ID: Optional. Applies to log `fetcher` when set to use `mix-log-api`
+  # ELC_AFSS_URL: Optional. Applies to log `writer` when set to use `filesystem`
+  # ELC_MONGODB_URI: Optional. Applies to log `writer` when set to use `mongodb`
+  # ELC_MONGODB_DATABASE_NAME: Optional. Applies to log `writer` when set to use `mongodb`
+  # ELC_MONGODB_COLLECTION_NAME: Optional. Applies to log `writer` when set to use `mongodb`
+# Update the config content to meet your specific event log collector configuration requirements
+eventLogCollector:
+  fetcher:
+    enable: true
+    resources:
+      limits:
+        cpu: 400m
+        memory: 500Mi
+      requests:
+        cpu: 200m
+        memory: 250Mi
+  processor:
+    enable: true
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 250Mi
+      requests:
+        cpu: 500m
+        memory: 100Mi
+  writer:
+    enable: true
+    resources:
+      limits:
+        cpu: 300m
+        memory: 250Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+  config:
+    #filename: config.yaml
+    config.yaml: "fetcher:\n    name: mix-log-api\n    config:\n        credentials:\n            auth_disabled: false\n            token_url: https://auth.crt.nuance.com/oauth2/token\n            scope: log\n            client_id: Provide a Mix Client ID\n            client_secret: Provide a Mix Client Secret\n            auth_timeout_ms: 5000\n        max_retries: -1\n        retry_delay: 5\n        record_check_frequency: 10\n        client_name: nuance-mob-ps-log-collector #neap\n        consumer_group_id: \\\\\\\"03\\\\\\\"\n        api_url: https://log.api.nuance.com\n        consumer_options:\n            auto.offset.reset: latest\n\nprocessor:\n    name: mix-default\n    config:\n        num_workers: 10\n        filter:\n            type: whitelist\n            content_type:\n            - application/x-nuance-asr-callsummary*\n        cache:\n            type: redis\n            # redis params\n            addr: redis-master:6379\n            db: 0\n            default_ttl: 900\n            password: RedisIsGreat\nwriter:\n    name: opensearch\n    config:\n        index_prefix: elc-v2-mix-logs\n        refresh: true\n        addresses:\n            - http://opensearch-master.analytics:9200\n\n        num_workers: 10\n        rate_limit: \n            limit: 10\n            burst: 1\n        max_retries: 10\n        delay: 10\n\npipeline:\n    storage_provider: kafka\n    fetcher:\n        writer:\n            hosts:\n              - kafka:9092\n            topic: queues.fetcher\n\n    processor:\n        reader:\n            hosts:\n              - kafka:9092                  \n            group: elc\n            topic: queues.fetcher\n            # offset: earliest\n\n        writer:\n            hosts:\n              - kafka:9092\n            topic: queues.processor\n\n    writer:\n        reader:\n            hosts:\n              - kafka:9092                  \n            group: elc\n            topic: queues.processor\n            # offset: earliest\\\"\""
+# Secret config values
+secrets: {}
+# artifactory:
+#   password: my-password
+#   token: some-token
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+##--------------------------------------------------------------------------------------------------------------------------------
+deployment:
+  annotations: {}
+  serviceLabels: {}
+configmap:
+  annotations: {}
+##--------------------------------------------------------------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  ## uncomment to make the ELC service headless
+  #clusterIP: None
+  httpPort: 8078
+  annotations: {}
+http:
+  enable: true
+  port: 8078
+##--------------------------------------------------------------------------------------------------------------------------------
+#Probing
+livenessProbe:
+  path: /ping
+  failureThreshold: 3
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+readinessProbe:
+  path: /ping
+  failureThreshold: 3
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+##--------------------------------------------------------------------------------------------------------------------------------
+##Persistence Storage Configurations
+##PV should support ReadOnlyMany access mode 
+persistence:
+  ##volumeType can be nfs, hostPath, other, existingClaim.
+  volumeType: none
+  ##Storage property is applicable to volume type nfs and other only 
+  storage: 5Gi
+  ##---------------------------------------------------------------------------------------------------------------------------------
+  ##If volumeType is NFS. 
+  ##PV and PVC will be created for every pool if NFS is enabled. NFS server details needs to be configured below
+  nfs:
+    ##configure nfs server IP 
+    server:
+    ##nfs server mount path
+    path:
+    ##---------------------------------------------------------------------------------------------------------------------------------
+    ##If volumeType is hostPath.
+    ##hostMountPath property is required. Configured dataPack.languages should be available on the host mount path
+  hostMountPath:
+  #---------------------------------------------------------------------------------------------------------------------------------
+  ##If volumeType is other. Configured dataPack.languages should be available on the PV mount 
+  other:
+    storageClassName: ""
+    ##pvSelectors can be configured to bind PVC to a static configured  PV
+    #pvSelectors: 
+    #  pvLabel: pvLabelValue
+    ##---------------------------------------------------------------------------------------------------------------------------------
+    ##If volumeType is existingClaim. Configured dataPack.languages should be available on the PV mount 
+  existingClaim:
+##-----------------------Prometheus Configuration-----------------------------------------------------------------
+prometheusOperator:
+  enable: true
+  namespace: monitoring
+  serviceMonitor:
+    labels:
+      release: prometheus
+      global-prometheus/scrape: "true"
+##------------------------Grafana Configuration--------------------------------------------------------------------------------------------------------
+grafana:
+  enabled: true
+  configmap:
+    annotations: {}
+  selectorLabels:
+    grafana_dashboard: "1"
+  datasource:
+    name: "Prometheus"
+    label: "Prometheus"
+    description: ""
+    type: "datasource"
+    pluginId: "prometheus"
+    pluginName: "Prometheus"
+##--------------------------------------------------------------------------------------------------------------------------------
+##fluentd configuration
+fluentd:
+  enabled: false
+  resources: {}
+  image:
+    repository: <REPOSITORY>/event-log-infra/fluentd
+    tag: latest
+    pullPolicy: IfNotPresent
+  service: |-
+    # HTTP input for the liveness and readiness probes
+    <source>
+      @type http
+      port 24224
+    </source>
+    <match fluentd.healthcheck>
+        @type stdout
+    </match>
+    <source>
+      @type tail
+      path /nuance/logs/event-log-collector.log
+      pos_file /nuance/logs/event-log-collector.log.pos
+      tag event-log-collector
+      <parse>
+        @type json
+      </parse>
+    </source>
+    <match event-log-collector>
+      @type elasticsearch
+      host elasticsearch-master.nuance-analytics
+      port 9200
+      time_key  T
+      index_name fluentd.${tag}.%Y%m%d
+      verify_es_version_at_startup false
+      default_elasticsearch_version 7
+      <buffer tag, time>
+        timekey 1h
+      </buffer>
+    </match>
+  ##--------------------------------------------------------------------------------------------------------------------------------

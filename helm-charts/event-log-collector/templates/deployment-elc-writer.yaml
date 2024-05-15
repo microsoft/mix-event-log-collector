@@ -1,0 +1,136 @@
+{{- if eq .Values.eventLogCollector.writer.enable true }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "event-log-collector.fullname" . }}-writer
+  annotations:
+{{ toYaml .Values.deployment.annotations | indent 4 }}
+  labels:
+{{ include "event-log-collector.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "event-log-collector.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  strategy:
+    rollingUpdate:
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+  revisionHistoryLimit: {{.Values.revisionHistoryLimit}}
+  template:
+    metadata:
+      annotations:
+        #checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        app.kubernetes.io/name: {{ include "event-log-collector.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - ./bin/event-log-writer
+            - -c
+            - configs/config.yaml
+            - -d
+          env:
+          {{- range $key, $val := .Values.environment }}
+            - name: {{ $key }}
+              value: {{ $val | quote }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.eventLogCollector.writer.resources | nindent 12 }}
+          volumeMounts:
+          - name: event-log-collector-config
+            mountPath: /nuance/configs/{{ .Values.eventLogCollector.config.filename }}
+            subPath: {{ .Values.eventLogCollector.config.filename }}
+{{- if ne .Values.persistence.volumeType "none" }}
+          - name: event-logs-volume
+            mountPath: "/nuance/event-logs"
+          #- name: event-log-collector-logs-volume
+          #  mountPath: /nuance/logs/
+{{- end }}
+          ports:
+          {{- if eq .Values.http.enable true}}
+            - name: elc-http
+              containerPort: {{ .Values.http.port }}
+          {{- end }}
+{{- if eq .Values.fluentd.enabled true }}
+        - name: fluentd
+          image: {{ .Values.fluentd.image.repository }}:{{ .Values.fluentd.image.tag }}
+          imagePullPolicy: {{ .Values.fluentd.image.pullPolicy }}
+          resources: 
+            {{ toYaml .Values.fluentd.resources | indent 12 }}
+          ports:
+            - name: fluentd-port
+              containerPort: 24224
+          livenessProbe:
+            httpGet:
+              path: /fluentd.healthcheck?json={}
+              port: fluentd-port
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /fluentd.healthcheck?json={}
+              port: fluentd-port
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          volumeMounts:
+          - name: event-log-collector-logs-volume
+            mountPath: /nuance/logs/
+          - name: fluentd-service-config
+            mountPath: /fluentd/etc/fluent.conf
+            subPath: fluent.conf
+{{- end}}        
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+        - name: event-log-collector-config
+          configMap:
+            name: {{ template "event-log-collector.fullname" . }}
+{{- if eq .Values.fluentd.enabled true }}        
+        - name: fluentd-service-config
+          configMap:
+            name: {{ template "event-log-collector.fullname" . }}
+            items:
+            - key: fluent.conf
+              path: fluent.conf
+              mode: 420
+        - name: event-log-collector-logs-volume
+          emptyDir: {}
+{{- end }}
+{{- if ne .Values.persistence.volumeType "none" }}
+        - name: event-logs-volume
+          {{- if eq .Values.persistence.volumeType "nfs" "other" }}
+          persistentVolumeClaim:
+            claimName: {{ template "event-log-collector.fullname" . }}
+          {{- end }}
+          {{- if eq .Values.persistence.volumeType "hostPath"  }}
+          hostPath:
+            path: {{ .Values.persistence.hostMountPath }}
+          {{- end }}
+          {{- if eq .Values.persistence.volumeType "existingClaim" }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+          {{- end }}
+{{- end }}
+{{- end }}
